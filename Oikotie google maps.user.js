@@ -212,6 +212,8 @@ function calculateSummaryRoutes(directionsService, directionsDisplay) {
             if (item) {
                 routeSummary += "public: " + item.duration.text + " ";
             }
+            console.log(routeSummary);
+
         } else {
             console.log('Directions request failed due to ' + status);
         }
@@ -241,7 +243,7 @@ function calculateSummaryRoutes(directionsService, directionsDisplay) {
     });
 }
 
-// update summary text
+// update summary
 function updateRouteSummary(text) {
     var routeSummaryDiv = document.getElementById('routeSummary');
     if (!routeSummaryDiv) {
