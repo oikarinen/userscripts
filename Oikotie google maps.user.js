@@ -14,14 +14,18 @@ const google = unsafeWindow.google
 // first part: add elements for start/end points, store them in GM,
 window.addEventListener('load', function() {
     insertContent();
+    initializeRoutePoints();
     initMap();
-    // calculate route alread now if we have something for target
-    if (document.getElementById('start').value && document.getElementById('start').value) {
-        document.getElementById('start').dispatchEvent(new Event('change'));
-    }
-
-    console.log("loaded oikotie script");
 }, false);
+
+function initializeRoutePoints() {
+    var routeEnd = document.getElementById('end');
+    var routeStart = document.getElementById('start');
+    routeEnd.value = GM_getValue("end") || "";
+    // read destination address from the page
+    var addr = document.querySelectorAll(".listing-breadcrumbs__item");
+    routeStart.value = addr[addr.length-1].textContent.trim();
+}
 
 function insertContent() {
     const routeFloat = document.createElement('div');
@@ -29,16 +33,12 @@ function insertContent() {
     const routeEnd = document.createElement('input');
     routeEnd.type = "text";
     routeEnd.placeholder = "Destination";
-    routeEnd.value = GM_getValue("end") || "";
     routeEnd.id = "end";
     routeEnd.style = "position: relative; float: left; width: 150px; height: 24px; font-size: 8pt;";
     routeFloat.appendChild(routeEnd);
 
     const routeStart = document.createElement('input');
-    // read destination address from the page
-    var temp = document.querySelectorAll(".listing-breadcrumbs__item");
     routeStart.type = "hidden";
-    routeStart.value = temp[temp.length-1].textContent.trim();
     routeStart.id = "start";
     routeFloat.appendChild(routeStart);
 
@@ -92,7 +92,7 @@ function insertContent() {
     routegallery.innerHTML = '<a class="gallery-controls__link link gallery-controls__link link" onclick="return false;" href="#route-tab" aria-selected="true" tabindex="0"><i class="link__icon customer-color-link customer-color-link--icon"></i><span class="show-for-medium-up link__text customer-color-link customer-color-link--icon">Route</span></a>';
     gallerytabs.appendChild(routegallery);
 
-    //style element to hide extra route info & display distance + time next to breadcrumps
+    //style element to hide extra route info & display distance + time to heading
     var styles = document.createElement('style');
     styles.type = 'text/css';
     var hideElements = [ "adp-warnbox", "adp-placemark", "adp-details", "adp-directions", "adp-agencies", "adp-legal" ];
@@ -101,9 +101,14 @@ function insertContent() {
         css += '.' + hideElements[j] + '{ display: none }\n';
     }
     styles.appendChild(document.createTextNode(css));
-
     (document.head || document.getElementsByTagName('head')[0] || document.querySelector('body')).appendChild(styles);
 
+    const routeSummary = document.createElement('span');
+    routeSummary.className = "listing-header__text";
+    routeSummary.id = "routeSummary";
+    // h2 with span elements for address & room layout
+    var header2ndline = document.getElementsByClassName('listing-header__headline listing-header__headline--secondary')[0];
+    header2ndline.insertBefore(routeSummary, header2ndline.lastElementChild);
 }
 
 
@@ -132,21 +137,30 @@ function initMap() {
     };
     document.getElementById('start').addEventListener('change', onChangeHandler);
     document.getElementById('end').addEventListener('change', onChangeHandler);
+    document.getElementById('mode').addEventListener('change', onChangeHandler);
+    // calculate route alread now if we have something for target
+    if (document.getElementById('start').value && document.getElementById('end').value) {
+        document.getElementById('start').dispatchEvent(new Event('change'));
+    }
+
+    calculateSummaryRoutes(directionsService, directionsDisplay);
 }
 
 function calculateAndDisplayRoute(directionsService, directionsDisplay) {
-    // valus from the form
+    // values from the form
     var selectedMode = document.getElementById('mode').value;
     var origin = document.getElementById('start').value;
     var destination = document.getElementById('end').value;
 
     // side effect store end value in GM
     GM_setValue("end", document.getElementById('end').value);
-    console.log("calculateAndDisplayRoute called");
     // date for next monday 9 am
     var monday = new Date();
     monday.setDate(monday.getDate() + (1 + 7 - monday.getDay()) % 7);
     monday.setHours(9,0,0);
+
+    console.log("calculateAndDisplayRoute called for " + selectedMode + " from " + origin + " to " + destination + " at " + monday);
+
     directionsService.route({
         origin: origin,
         destination: destination,
@@ -159,8 +173,80 @@ function calculateAndDisplayRoute(directionsService, directionsDisplay) {
     }, function(response, status) {
         if (status === 'OK') {
             directionsDisplay.setDirections(response);
+            var item = response.routes[0].legs[0];
+            if (item) {
+                var routeSummary = item.distance.text + " " + item.duration.text;
+                //updateRouteSummary(routeSummary);
+            }
         } else {
             window.alert('Directions request failed due to ' + status);
         }
     });
+}
+
+function calculateSummaryRoutes(directionsService, directionsDisplay) {
+    var selectedModes = [ "Transit", "Driving" ];
+    // values from the form
+    var origin = document.getElementById('start').value;
+    var destination = document.getElementById('end').value;
+
+    // date for next monday 9 am
+    var monday = new Date();
+    monday.setDate(monday.getDate() + (1 + 7 - monday.getDay()) % 7);
+    monday.setHours(9,0,0);
+
+    var routeSummary = "";
+    var selectedMode = "TRANSIT";
+    directionsService.route({
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode[selectedMode],
+        transitOptions: {
+            arrivalTime: monday
+        },
+        region: 'fi'
+    }, function(response, status) {
+        if (status === 'OK') {
+            var item = response.routes[0].legs[0];
+            var mode = response.request.travelMode;
+            if (item) {
+                routeSummary += "public: " + item.duration.text + " ";
+            }
+        } else {
+            console.log('Directions request failed due to ' + status);
+        }
+    });
+    selectedMode = "DRIVING";
+    directionsService.route({
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode[selectedMode],
+        transitOptions: {
+            arrivalTime: monday
+        },
+        region: 'fi'
+    }, function(response, status) {
+        if (status === 'OK') {
+            var item = response.routes[0].legs[0];
+            var mode = response.request.travelMode;
+            if (item) {
+                routeSummary += "car: " + item.distance.text + " " + item.duration.text + " ";
+            }
+            console.log(routeSummary);
+            updateRouteSummary(routeSummary);
+
+        } else {
+            console.log('Directions request failed due to ' + status);
+        }
+    });
+}
+
+// update summary text
+function updateRouteSummary(text) {
+    var routeSummaryDiv = document.getElementById('routeSummary');
+    if (!routeSummaryDiv) {
+        console.log("still missing routeSummary");
+        return;
+    }
+    routeSummaryDiv.innerText = text;
 }
