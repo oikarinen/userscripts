@@ -10,6 +10,7 @@
 
 window.addEventListener('load', function() {
     comparePriceAverage();
+    compareCosts();
 }, false);// highlight values in info rows
 
 function infoField(fieldName) {
@@ -41,9 +42,43 @@ function comparePriceAverage() {
     var ppsvalue = parseFloat(pps.innerText.replace(/m2/,"").replace(/[^0-9,]/g,"").replace(/,/,"."));
     var postalcode = /\d\d\d\d\d/.exec(infoField("Sijainti").innerText)[0];
     var avg = avgprices[postalcode];
+    pps.innerHTML += " (avg 2016 was " + avg + " e/m<sup>2</sup> for " + postalcode + ")";
     // paint it red if price more than 2016 avg for the zip +10%
     if (ppsvalue > avg * 1.1) {
-        pps.style = "color: red";
+        pps.style = "color: red;";
+        pps.innerHTML += " price >110%";
+    } else if (ppsvalue < avg * 0.8) {
+        pps.style = "color: red;";
+        pps.innerHTML += " price <80%";
     }
-    pps.innerHTML += " (avg 2016 was " + avg + " for " + postalcode + ")";
+}
+
+function compareCosts() {
+    var m2 = infoField("Asuinpinta-ala");
+    var hv = infoField("Hoitovastike");
+    var rv = infoField("Rahoitusvastike");
+    var by = infoField("Rakennusvuosi");
+    var m2val = parseFloat(m2.innerText.replace(/m2/,"").replace(/,/,"."));
+    var hvval = parseFloat(hv.replace(/,/,"."))/m2val;
+    var rvval = parseFloat(rv.replace(/,/,"."))/m2val;
+    var age = (new Date()).getFullYear() - parseInt(by);
+    // el not used yet
+    var el = infoField("Sähkökustannukset");
+    var lo = infoField("Tontin omistus");
+
+    if (hvval > 3.0) {
+        hv.style = "color: red;";
+        hv.innerHTML += " high hv/m<sup>2</sup> " + hvval;
+    }
+    if (rvval > 1.0) {
+        rv.style = "color: red;";
+        rv.innerHTML += " high rv/m<sup>2</sup> " + hvval;
+    }
+    if (age > 40) {
+        by.style = "color: red;";
+        by.innerHTML += " old building, check repairs";
+    }
+    if (lo.innerText.search(/oma/i) == -1 || lo.innerText.search(/vuokra/i != -1)) {
+        lo.style = "color: red;";
+    }
 }
