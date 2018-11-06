@@ -2,7 +2,7 @@
 // @name        Oikotie google maps
 // @namespace   http://tampermonkey.net/
 // @description Google maps directions & travel time to apartments sold in oikotie
-// @include     https://asunnot.oikotie.fi/myytavat-asunnot*
+// @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
 // @version     0.1
 // @grant       GM_getValue
 // @grant       GM_setValue
