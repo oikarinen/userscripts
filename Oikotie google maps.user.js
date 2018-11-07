@@ -3,7 +3,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Google maps directions & travel time to apartments sold in oikotie
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.1
+// @version     0.2.1
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @license     All rights reserved.
@@ -195,7 +195,7 @@ function calculateSummaryRoutes(directionsService, directionsDisplay) {
     monday.setDate(monday.getDate() + (1 + 7 - monday.getDay()) % 7);
     monday.setHours(9,0,0);
 
-    var routeSummary = "";
+    let routeSummary = "";
     var selectedMode = "TRANSIT";
     directionsService.route({
         origin: origin,
@@ -208,16 +208,16 @@ function calculateSummaryRoutes(directionsService, directionsDisplay) {
     }, function(response, status) {
         if (status === 'OK') {
             var item = response.routes[0].legs[0];
-            var mode = response.request.travelMode;
             if (item) {
                 routeSummary += "public: " + item.duration.text + " ";
             }
-            console.log(routeSummary);
-
+            //console.log(routeSummary);
+            updateRouteSummary(routeSummary);
         } else {
             console.log('Directions request failed due to ' + status);
         }
     });
+    /*
     selectedMode = "DRIVING";
     directionsService.route({
         origin: origin,
@@ -241,6 +241,7 @@ function calculateSummaryRoutes(directionsService, directionsDisplay) {
             console.log('Directions request failed due to ' + status);
         }
     });
+    */
 }
 
 // update summary
