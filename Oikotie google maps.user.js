@@ -3,7 +3,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Google maps directions & travel time to apartments sold in oikotie
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.2.1
+// @version     0.2.2
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @license     All rights reserved.
@@ -111,17 +111,15 @@ function insertContent() {
     header2ndline.insertBefore(routeSummary, header2ndline.lastElementChild);
 }
 
-
 function initMap() {
     var directionsService = new google.maps.DirectionsService();
     var directionsDisplay = new google.maps.DirectionsRenderer();
-    var hel = new google.maps.LatLng(60.21, 25.08);
+    var hel = new google.maps.LatLng(25.0, 60.2);
     var mapOptions = {
-        //zoom: 7,
-        //center: hel,
+        zoom: 12,
+        center: hel,
         gestureHandling: 'greedy',
         streetViewControl: false
-
     }
     var map = new google.maps.Map(document.getElementById('mapdiv'), mapOptions);
     directionsDisplay.setMap(map);
@@ -130,6 +128,45 @@ function initMap() {
     // public transport layer
     var transitLayer = new google.maps.TransitLayer();
     transitLayer.setMap(map);
+
+    // WMS part adapted from https://jsfiddle.net/u8tbv3hg/
+    // Set tile size to map size to get just one single tile. But still  multiple tiles is fetched from server
+    var TILE_WIDTH = 256;
+    var TILE_HEIGHT = 256;
+    var wmsMapType = new google.maps.ImageMapType({
+        getTileUrl: function (coord, zoom) {
+            var proj = map.getProjection();
+            var zfactor = Math.pow(2, zoom);
+            // get Long Lat coordinates
+            var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+            var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+            //create the Bounding box string
+            var bbox = top.lng() + "," + bot.lat() + "," + bot.lng() + "," + top.lat();
+            //The data must be in WGS84
+            var baseURL = 'https://kartta.hsy.fi/geoserver/wms?';
+            var version = "1.3.0";
+            var request = "GetMap";
+            var format = "image/png"; //type of image returned
+            //The layer ID.  Can be found when using the layers properties tool in ArcMap
+            var layers = 'Kavely5min,Kavely10min,Kavely15min'; // 10 15
+            //var srs = "EPSG:4326"; //projection to display. This is the projection of google map. Don't change unless you know what you are doing.
+            var srs = "CRS:84"; // looks like we know..
+
+            //Add the components of the URL together
+            var width = TILE_WIDTH;
+            var height = TILE_HEIGHT;
+
+            var styles = "Asemanseutu_5min,Asemanseutu_10min,Asemanseutu_15min"; // 10 15
+            var url = baseURL + "version=" + version + "&request=" + request + "&Layers=" + layers + "&Styles=" + styles + "&CRS=" + srs + "&BBOX=" + bbox + "&width=" + width + "&height=" + height + "&format=" + format + "&TRANSPARENT=TRUE&EXCEPTIONS=INIMAGE";
+            console.log(url);
+            return url;
+        },
+        tileSize: new google.maps.Size(TILE_WIDTH, TILE_HEIGHT),
+        isPng: true
+    });
+
+    map.overlayMapTypes.insertAt(0, wmsMapType);
+
 
     // calculate route when start/end locations change
     var onChangeHandler = function() {
