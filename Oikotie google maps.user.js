@@ -3,7 +3,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Google maps directions & travel time to apartments sold in oikotie
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.2.2
+// @version     0.2.3
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @license     All rights reserved.
@@ -148,7 +148,7 @@ function initMap() {
             var request = "GetMap";
             var format = "image/png"; //type of image returned
             //The layer ID.  Can be found when using the layers properties tool in ArcMap
-            var layers = 'Kavely5min,Kavely10min,Kavely15min'; // 10 15
+            var layers = 'kaupunginosat,seutukartta_kunta_2017,Kavely5min,Kavely10min,Kavely15min,no2_ylitysalueet_2017';
             //var srs = "EPSG:4326"; //projection to display. This is the projection of google map. Don't change unless you know what you are doing.
             var srs = "CRS:84"; // looks like we know..
 
@@ -156,7 +156,7 @@ function initMap() {
             var width = TILE_WIDTH;
             var height = TILE_HEIGHT;
 
-            var styles = "Asemanseutu_5min,Asemanseutu_10min,Asemanseutu_15min"; // 10 15
+            var styles = "seutukartta_pien_suur_ja_tilastoalueet_tyyli,seutukartta_kunnat_tyyli,Asemanseutu_5min,Asemanseutu_10min,Asemanseutu_15min,no2_ylitysalueet";
             var url = baseURL + "version=" + version + "&request=" + request + "&Layers=" + layers + "&Styles=" + styles + "&CRS=" + srs + "&BBOX=" + bbox + "&width=" + width + "&height=" + height + "&format=" + format + "&TRANSPARENT=TRUE&EXCEPTIONS=INIMAGE";
             console.log(url);
             return url;
@@ -254,31 +254,6 @@ function calculateSummaryRoutes(directionsService, directionsDisplay) {
             console.log('Directions request failed due to ' + status);
         }
     });
-    /*
-    selectedMode = "DRIVING";
-    directionsService.route({
-        origin: origin,
-        destination: destination,
-        travelMode: google.maps.TravelMode[selectedMode],
-        transitOptions: {
-            arrivalTime: monday
-        },
-        region: 'fi'
-    }, function(response, status) {
-        if (status === 'OK') {
-            var item = response.routes[0].legs[0];
-            var mode = response.request.travelMode;
-            if (item) {
-                routeSummary += "car: " + item.distance.text + " " + item.duration.text + " ";
-            }
-            console.log(routeSummary);
-            updateRouteSummary(routeSummary);
-
-        } else {
-            console.log('Directions request failed due to ' + status);
-        }
-    });
-    */
 }
 
 // update summary
