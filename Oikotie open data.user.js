@@ -4,7 +4,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Average price for apartments sold in oikotie and more
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.2.1
+// @version     0.2.2
 // @license     All rights reserved.
 // ==/UserScript==
 
@@ -66,27 +66,30 @@ function comparePriceAverage() {
         //only hel included
         return;
     }
-    var type = infoField("Rakennuksen tyyppi");
-    if (!type) {
-        type = "kaikki";
-    } else {
-        if (type.innerText.search(/Kerrostalo/i) != -1) {
-            type = "kerros";
-        } else if (type.innerText.search(/Rivitalo/i) != -1 || type.innerText.search(/Paritalo/i) != -1) {
-            type = "rivi";
-        } else {
-            type = "kaikki";
-        }
-    }
-    var n = avgprices[postalcode];
+    // determine avg prices
     var avg = "?";
+    var n = avgprices[postalcode];
     if (n) {
+        var type = infoField("Rakennuksen tyyppi");
+        var t = "kaikki";
+        if (type) {
+            if (type.innerText.search(/Kerrostalo/i) != -1) {
+                t = "kerros";
+            } else if (type.innerText.search(/Rivitalo/i) != -1 || type.innerText.search(/Paritalo/i) != -1) {
+                t = "rivi";
+            } else {
+                t = "kaikki";
+            }
+            if (!n[type]) {
+                type = "kaikki";
+            }
+        }
         avg = n[type];
-    }
-    // missing value if no sales or too few sales -> default to all
-    if (avg == "-" || avg == "..") {
-        type="kaikki";
-        avg = avgprices[postalcode][type];
+        // missing value if no sales or too few sales -> default to all
+        if (avg == "-" || avg == "..") {
+            type="kaikki";
+            avg = n[type];
+        }
     }
     var percent = Math.round(ppsvalue/parseFloat(avg)*100);
     pps.innerHTML += " = " + percent + "% of avg 2016: " + avg + " e/m<sup>2</sup> for " + postalcode + "/" + type;
