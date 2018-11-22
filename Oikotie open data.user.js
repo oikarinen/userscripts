@@ -4,7 +4,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Average price for apartments sold in oikotie and more
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.2.2
+// @version     0.2.3
 // @license     All rights reserved.
 // ==/UserScript==
 
@@ -107,8 +107,7 @@ function compareCosts() {
     var hv = infoField("Hoitovastike");
     var hvval = Math.round(parseFloat(parseFloatField(hv))/m2*10)/10;
     var heat = infoField("Lämmitys");
-    var elheat = (heat.innerText.search(/kauko/i) == -1) && (heat.innerText.search(/sähkö/i) != -1);
-
+    var elheat = !heat || ((heat.innerText.search(/kauko/i) == -1) && (heat.innerText.search(/sähkö/i) != -1));
     if (hv) {
         hv.innerHTML += " = " + hvval + " e/m<sup>2</sup>";
         if ((type && type.innerText.search(/Kerrostalo/i) == -1 && hvval > 3.3) || (elheat && hvval > 1.0) || (!elheat && hvval > 2.0)) {
