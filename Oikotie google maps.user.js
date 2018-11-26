@@ -3,7 +3,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Google maps directions & travel time to apartments sold in oikotie
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.2.4
+// @version     0.2.5
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @license     All rights reserved.
@@ -143,6 +143,10 @@ function initMap() {
     var transitLayer = new google.maps.TransitLayer();
     transitLayer.setMap(map);
 
+    // park n ride
+    // NOTE: This uses cross-domain XHR, and may not work on older browsers.
+    map.data.loadGeoJson('https://data-hslhrt.opendata.arcgis.com/datasets/a20dfebba9984a1ea5318abd262a68a4_0.geojson');
+
     // WMS part adapted from https://jsfiddle.net/u8tbv3hg/
     // Set tile size to map size to get just one single tile. But still  multiple tiles is fetched from server
     var TILE_WIDTH = 256;
@@ -162,7 +166,10 @@ function initMap() {
             var request = "GetMap";
             var format = "image/png"; //type of image returned
             //The layer ID.  Can be found when using the layers properties tool in ArcMap
-            var layers = 'kaupunginosat,seutukartta_kunta_2017,Kavely5min,Kavely10min,Kavely15min,no2_ylitysalueet_2017';
+            // Kavely15min removed as it clutters the map too much..
+            var layers = 'kaupunginosat,seutukartta_kunta_2017,Kavely5min,Kavely10min,no2_ylitysalueet_2017';
+            // no need to define styles
+            var styles = "";
             //var srs = "EPSG:4326"; //projection to display. This is the projection of google map. Don't change unless you know what you are doing.
             var srs = "CRS:84"; // looks like we know..
 
@@ -170,7 +177,6 @@ function initMap() {
             var width = TILE_WIDTH;
             var height = TILE_HEIGHT;
 
-            var styles = "seutukartta_pien_suur_ja_tilastoalueet_tyyli,seutukartta_kunnat_tyyli,Asemanseutu_5min,Asemanseutu_10min,Asemanseutu_15min,no2_ylitysalueet";
             var url = baseURL + "version=" + version + "&request=" + request + "&Layers=" + layers + "&Styles=" + styles + "&CRS=" + srs + "&BBOX=" + bbox + "&width=" + width + "&height=" + height + "&format=" + format + "&TRANSPARENT=TRUE&EXCEPTIONS=INIMAGE";
             console.log(url);
             return url;
