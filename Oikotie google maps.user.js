@@ -3,7 +3,7 @@
 // @namespace   http://tampermonkey.net/
 // @description Google maps directions & travel time to apartments sold in oikotie
 // @include     https://asunnot.oikotie.fi/myytavat-asunnot/*
-// @version     0.2.5
+// @version     0.2.6
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @license     All rights reserved.
@@ -158,26 +158,22 @@ function initMap() {
             // get Long Lat coordinates
             var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
             var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
-            //create the Bounding box string
-            var bbox = top.lng() + "," + bot.lat() + "," + bot.lng() + "," + top.lat();
-            //The data must be in WGS84
-            var baseURL = 'https://kartta.hsy.fi/geoserver/wms?';
-            var version = "1.3.0";
-            var request = "GetMap";
-            var format = "image/png"; //type of image returned
-            //The layer ID.  Can be found when using the layers properties tool in ArcMap
-            // Kavely15min removed as it clutters the map too much..
-            var layers = 'kaupunginosat,seutukartta_kunta_2017,Kavely5min,Kavely10min,no2_ylitysalueet_2017';
-            // no need to define styles
-            var styles = "";
-            //var srs = "EPSG:4326"; //projection to display. This is the projection of google map. Don't change unless you know what you are doing.
-            var srs = "CRS:84"; // looks like we know..
+            let a = {
+                bbox: top.lng() + "," + bot.lat() + "," + bot.lng() + "," + top.lat(),
+                baseURL:'https://kartta.hsy.fi/geoserver/wms?',
+                version: "1.3.0",
+                request: "GetMap",
+                format: "image/png",
+                layers: 'kaupunginosat,seutukartta_kunta_2017,Kavely5min,Kavely10min,no2_ylitysalueet_2017',
+                styles: "",
+                srs: "CRS:84",
+                width: TILE_WIDTH,
+                height: TILE_HEIGHT,
+                transparent: "TRUE",
+                exceptions: "INIMAGE"
+            };
 
-            //Add the components of the URL together
-            var width = TILE_WIDTH;
-            var height = TILE_HEIGHT;
-
-            var url = baseURL + "version=" + version + "&request=" + request + "&Layers=" + layers + "&Styles=" + styles + "&CRS=" + srs + "&BBOX=" + bbox + "&width=" + width + "&height=" + height + "&format=" + format + "&TRANSPARENT=TRUE&EXCEPTIONS=INIMAGE";
+            var url = a.baseURL + "version=" + a.version + "&request=" + a.request + "&Layers=" + a.layers + "&Styles=" + a.styles + "&CRS=" + a.srs + "&BBOX=" + a.bbox + "&width=" + a.width + "&height=" + a.height + "&format=" + a.format + "&TRANSPARENT=" + a.transparent + "&EXCEPTIONS=" + a.exceptions;
             console.log(url);
             return url;
         },
