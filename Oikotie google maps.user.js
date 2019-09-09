@@ -164,7 +164,7 @@ function initMap() {
                 version: "1.3.0",
                 request: "GetMap",
                 format: "image/png",
-                layers: 'kaupunginosat,seutukartta_kunta_2017,Kavely5min,Kavely10min,no2_ylitysalueet_2017',
+                layers: 'kaupunginosat_2019,seutukartta_kunta_2018,Kavely5min,Kavely10min,no2_ylitysalueet_2017',
                 styles: "",
                 srs: "CRS:84",
                 width: TILE_WIDTH,
